@@ -1,0 +1,71 @@
+services:
+  php-apache2:
+    build:
+      args:
+        user: roni
+        uid: 1000
+      context: .
+      dockerfile: laravel.dockerfile
+    image: laravel-vue-survey-php-apache2
+    container_name: laravel-vue-survey-php-apache2
+    ports:
+      - 80:80 
+    restart: unless-stopped
+    working_dir: /var/www/html
+    volumes:
+      - .:/var/www/html
+    networks:
+      - laravel-vue-survey
+
+  mysql:
+    image: mysql:8
+    container_name: laravel-vue-survey-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_USER: ${DB_USER}
+      SERVICE_TAGS: dev
+      SERVICE_NAME: mysql
+    expose:
+      - 3306
+    ports:
+      - 3306:3306
+    networks:
+      - laravel-vue-survey
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:latest
+    container_name: laravel-vue-survey-phpmyadmin
+    ports:
+      - 8080:80
+    restart: unless-stopped
+    environment:
+      PMA_HOST: mysql:3306
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+    networks:
+      - laravel-vue-survey
+
+  vue:
+    build:
+      args:
+        user: roni
+        uid: 1000
+      context: .
+      dockerfile: vue.dockerfile
+    image: laravel-vue-survey-vue
+    container_name: laravel-vue-survey-vue
+    working_dir: /home/roni/laravel-vue-survey/vue
+    volumes:
+      - .:/home/roni/laravel-vue-survey
+    expose:
+      - 5173
+    ports:
+      - 5173:5173
+    networks:
+      - laravel-vue-survey
+    command: "npm run dev"
+
+networks:
+  laravel-vue-survey:
+    driver: bridge
